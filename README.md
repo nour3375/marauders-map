@@ -2,160 +2,114 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<title>خريطة النهابين</title>
+<title>معمل الجرعات السحرية</title>
 <style>
     body {
-        margin: 0;
-        font-family: "Arial", sans-serif;
-        background-color: #1b1b1b;
+        background-color: #1c1c1c;
         color: #fff;
+        font-family: Arial, sans-serif;
         text-align: center;
     }
-    #start-screen, #end-screen {
+    h1 {
+        margin-top: 20px;
+    }
+    #lab {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+    .shelf {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        background: #3e2c1c;
-        color: #f5e6c4;
+        gap: 10px;
+        margin-right: 50px;
     }
-    #map-container {
-        display: none;
+    .ingredient {
+        width: 80px;
+        height: 80px;
+        background-color: #444;
+        border-radius: 10px;
+        cursor: grab;
+        border: 2px solid #ccc;
+    }
+    #cauldron {
+        width: 300px;
+        height: 200px;
+        background-color: #333;
+        border-radius: 50% 50% 0 0;
         position: relative;
-        text-align: center;
-        background-color: black;
+        overflow: hidden;
+        border: 4px solid #777;
     }
-    #map-image {
-        max-width: 100%;
-        height: auto;
-        opacity: 0;
-        animation: revealInk 4s ease-in forwards;
-        animation-delay: 0.5s;
-    }
-    @keyframes revealInk {
-        from { opacity: 0; }
-        to { opacity: 1; }
-    }
-    .marker {
+    #drop-zone {
+        width: 100%;
+        height: 100%;
         position: absolute;
-        background: rgba(255,255,255,0.7);
-        color: black;
-        padding: 5px;
-        border-radius: 50%;
-        cursor: pointer;
-        font-weight: bold;
+        top: 0;
     }
-    .footsteps {
-        position: absolute;
-        width: 40px;
-        height: 40px;
-        background-image: url('https://i.ibb.co/Zm4B2yB/footsteps.png');
-        background-size: contain;
-        background-repeat: no-repeat;
-    }
-    #puzzle-box {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: #3e2c1c;
-        padding: 20px;
-        border: 2px solid #f5e6c4;
-        color: #f5e6c4;
-        display: none;
-    }
-    input[type="text"] {
-        padding: 5px;
-        margin-top: 10px;
-    }
-    button {
-        margin-top: 10px;
-        padding: 5px 10px;
-        cursor: pointer;
+    #status {
+        margin-top: 20px;
+        font-size: 20px;
     }
 </style>
 </head>
 <body>
 
-<!-- الأصوات -->
-<audio id="paper-sound" src="https://www.soundjay.com/misc/sounds/page-turn-1.mp3"></audio>
-<audio id="steps-sound" src="https://www.soundjay.com/footsteps/footsteps-on-hardwood-1.mp3"></audio>
+<h1>⚗️ معمل الجرعات السحرية</h1>
+<p id="potion-name"></p>
 
-<!-- شاشة البداية -->
-<div id="start-screen">
-    <h1>🪄 I solemnly swear that I am up to no good 🪄</h1>
-    <button onclick="showMap()">Show Map</button>
+<div id="lab">
+    <div class="shelf">
+        <div class="ingredient" draggable="true" data-name="عشب التنين" style="background-color: green;"></div>
+        <div class="ingredient" draggable="true" data-name="دم العنقاء" style="background-color: red;"></div>
+        <div class="ingredient" draggable="true" data-name="أشواك القنفذ" style="background-color: brown;"></div>
+    </div>
+    <div id="cauldron">
+        <div id="drop-zone"></div>
+    </div>
 </div>
 
-<!-- الخريطة -->
-<div id="map-container">
-    <img id="map-image" src="https://i.ibb.co/1zLZk6h/marauders-map.jpg" alt="Marauder's Map">
-    <div class="marker" style="top: 40%; left: 30%;" onclick="showPuzzle(0)">M1</div>
-    <div class="marker" style="top: 60%; left: 50%;" onclick="showPuzzle(1)">C2</div>
-    <div class="marker" style="top: 50%; left: 70%;" onclick="showPuzzle(2)">I3</div>
-    <button style="position: absolute; bottom: 10px; right: 10px;" onclick="endMap()">Mischief Managed</button>
-</div>
-
-<!-- صندوق الألغاز -->
-<div id="puzzle-box">
-    <p id="puzzle-text"></p>
-    <input type="text" id="answer" placeholder="أدخل الإجابة">
-    <button onclick="checkAnswer()">تحقق</button>
-</div>
-
-<!-- شاشة النهاية -->
-<div id="end-screen" style="display:none;">
-    <h1>✨ Mischief Managed ✨</h1>
-    <img src="https://i.ibb.co/3m5Rfnn/blank-parchment.jpg" style="max-width:100%;">
-</div>
+<div id="status"></div>
 
 <script>
-    const puzzles = [
-        {question: "مكان لا يدخله إلا من يُجب على سؤال حكيم، وبابه بلا كلمة سر بل لغز جديد كل مرة.", answer: "برج رافنكلو", image: "https://i.ibb.co/zP9PjH6/ravenclaw-tower.jpg"},
-        {question: "قطعة ورق قد تبدو فارغة، لكن عند تمرير العصا السحرية وكتابة كلمة سر، تُظهر خريطة كاملة.", answer: "خريطة النهابين", image: "https://i.ibb.co/1zLZk6h/marauders-map.jpg"},
-        {question: "أستاذة مؤقتة تولت رعاية المخلوقات السحرية عندما غاب معلمها الأصلي، وعلمت الطلاب عن أحادي القرن.", answer: "ويلهيلمينا جروبلي-بلانك", image: "https://i.ibb.co/w0gngnS/wilhelmina.jpg"}
+    const potions = [
+        { name: "جرعة القوة", ingredients: ["عشب التنين", "دم العنقاء"] },
+        { name: "جرعة النوم", ingredients: ["أشواك القنفذ", "عشب التنين"] }
     ];
 
-    let currentPuzzleIndex = null;
+    let currentPotion = potions[Math.floor(Math.random() * potions.length)];
+    let chosenIngredients = [];
 
-    function showMap() {
-        document.getElementById('paper-sound').play();
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('map-container').style.display = 'block';
-    }
+    document.getElementById("potion-name").textContent = "الجرعة المطلوبة: " + currentPotion.name;
 
-    function showPuzzle(index) {
-        currentPuzzleIndex = index;
-        document.getElementById('puzzle-text').textContent = puzzles[index].question;
-        document.getElementById('puzzle-box').style.display = 'block';
-    }
+    const ingredients = document.querySelectorAll(".ingredient");
+    const dropZone = document.getElementById("drop-zone");
 
-    function checkAnswer() {
-        const userAnswer = document.getElementById('answer').value.trim();
-        if(userAnswer === puzzles[currentPuzzleIndex].answer) {
-            const marker = document.querySelectorAll('.marker')[currentPuzzleIndex];
-            marker.innerHTML = `<img src="${puzzles[currentPuzzleIndex].image}" style="width:100px;">`;
-            document.getElementById('puzzle-box').style.display = 'none';
-            document.getElementById('steps-sound').play();
-            showFootsteps(marker);
-        } else {
-            alert("إجابة خاطئة! حاول مرة أخرى.");
+    ingredients.forEach(ingredient => {
+        ingredient.addEventListener("dragstart", e => {
+            e.dataTransfer.setData("text", ingredient.dataset.name);
+        });
+    });
+
+    dropZone.addEventListener("dragover", e => {
+        e.preventDefault();
+    });
+
+    dropZone.addEventListener("drop", e => {
+        e.preventDefault();
+        const ingredientName = e.dataTransfer.getData("text");
+        chosenIngredients.push(ingredientName);
+
+        if (chosenIngredients.length === currentPotion.ingredients.length) {
+            if (JSON.stringify(chosenIngredients) === JSON.stringify(currentPotion.ingredients)) {
+                document.getElementById("status").textContent = "✨ الجرعة نجحت!";
+                document.getElementById("status").style.color = "lightgreen";
+            } else {
+                document.getElementById("status").textContent = "💥 فشلت الجرعة!";
+                document.getElementById("status").style.color = "red";
+            }
         }
-    }
-
-    function showFootsteps(marker) {
-        const foot = document.createElement('div');
-        foot.classList.add('footsteps');
-        foot.style.top = marker.style.top;
-        foot.style.left = marker.style.left;
-        document.getElementById('map-container').appendChild(foot);
-    }
-
-    function endMap() {
-        document.getElementById('map-container').style.display = 'none';
-        document.getElementById('end-screen').style.display = 'flex';
-    }
+    });
 </script>
 
 </body>
